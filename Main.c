@@ -1,13 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef LINUX
-
-#endif
-
-int main (char *argv[], int argc) 
+int main (int argc, char *argv[]) 
 {
   //program start 
+  Img2File (argv[1], ".") ;
 
   return 0;
 }

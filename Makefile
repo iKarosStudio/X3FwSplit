@@ -9,5 +9,5 @@ X3Split : $(OBJS)
 Main.o : Main.c
 	gcc -c Main.c
 
-X3FwSplit.o : X3FwSplit.c
+X3FwSplit.o : X3FwSplit.c X3FwSplit.h
 	gcc -c X3FwSplit.c

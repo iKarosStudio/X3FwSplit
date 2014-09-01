@@ -18,6 +18,7 @@ int Img2File (char *InputFilePath, char *OutputFilePath)
   */
   printf ("*Open %s ... ", InputFilePath) ;
   FwFileImg = fopen (InputFilePath, "rb") ;
+
   if (FwFileImg) {
     printf ("success!\n") ;
 
@@ -55,7 +56,7 @@ int Img2File (char *InputFilePath, char *OutputFilePath)
 
     fclose (FwFileImg) ;
   } else {
-    printf ("fail!\n") ;
+    printf ("fail! (Path of Filename error?)\n") ;
   }
   return 0;
 }
@@ -122,7 +123,8 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
 
   
   FwSectorHeader = malloc (SECTOR_HEADER_SIZE) ;
-  for (SectorIndex = 0; SectorIndex < FileAmount; SectorIndex++) {
+  //for (SectorIndex = 0; SectorIndex < FileAmount; SectorIndex++) {
+  for (SectorIndex = 0; SectorIndex < 1; SectorIndex++) {
     memcpy (FwSectorHeader, FwSectorAddress, SECTOR_HEADER_SIZE) ;
 
     /*
@@ -138,8 +140,18 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
       Move pointer to next table offset
     */
     FwSectorAddress += SECTOR_HEADER_SIZE;
+
+    /*
+      Split file path
+    */
+    Res = SplitFilePath (FwSectorHeader->FilePath, '/') ;
   }
 
   free (FwSectorHeader) ;
+  return 0;
+}
+
+int SplitFilePath (char *FulllPath, char Spliter) 
+{
   return 0;
 }

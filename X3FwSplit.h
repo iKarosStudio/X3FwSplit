@@ -44,5 +44,7 @@ int Img2File (char *InputFilePath, char *OutputFilePath) ;
 int DumpFileHeader (FILE *FwFileRam) ;
 int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount) ;
 
+int SplitFilePath (char *FullPath, char Spliter) ;
+
 
 

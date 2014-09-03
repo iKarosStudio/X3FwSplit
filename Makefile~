@@ -1,7 +1,0 @@
-
-
-X3Split : Main.o
-	gcc Main.o - X3Split
-
-Main.o : Main.c
-	gcc Main.c -c Main.o

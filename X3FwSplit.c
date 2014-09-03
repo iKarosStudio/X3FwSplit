@@ -151,7 +151,15 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
   return 0;
 }
 
-int SplitFilePath (char *FulllPath, char Spliter) 
+int SplitFilePath (char *FullPath, char Spliter) 
 {
+  char *FilePath;
+  
+  printf ("File path spliter : \n") ;
+
+  /*
+    Split full file path with strtok
+  */
+  
   return 0;
 }

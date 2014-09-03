@@ -32,7 +32,7 @@ typedef struct {
 } SectorHeader ;
 
 typedef struct {
-  char FilePath[56];
+  char *FilePath;
   unsigned int SectorIndex;
   unsigned int FileSize;
   void *NextFile;

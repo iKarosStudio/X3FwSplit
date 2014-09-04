@@ -6,6 +6,7 @@
 
 void *FwFileRam = NULL;
 unsigned int FileAmount = 0;
+SplitFileList *DefaultFileList = NULL ;
 
 int Img2File (char *InputFilePath, char *OutputFilePath) 
 {
@@ -151,16 +152,22 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
   return 0;
 }
 
-int SplitFilePath (char *FullPath, char Spliter) 
+int SplitFilePath (char *TargetString, char Spliter) 
 {
-  char *FilePath;
-  
+  char *PathBuffer = NULL;
+  char *PtrSpliter = &Spliter;
+
+  PathBuffer = malloc (64) ;
+
+
+
   printf ("File path spliter : \n") ;
 
   /*
     todo
     Split full file path with strtok
   */
+  
   
   return 0;
 }

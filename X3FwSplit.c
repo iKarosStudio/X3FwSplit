@@ -6,12 +6,15 @@
 
 void *FwFileRam = NULL;
 unsigned int FileAmount = 0;
-SplitFileList *DefaultFileList = NULL ;
+
+/* A list content file path ready to create */
+FileList *MainFileList = NULL ;
 
 int Img2File (char *InputFilePath, char *OutputFilePath) 
 {
   int Res = 0;
   int Index = 0;
+  FileList *PtrCurretFile = NULL;
   int FwFileSize = 0;
   FILE *FwFileImg;
   /*
@@ -145,29 +148,83 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
     /*
       Split file path
     */
-    Res = SplitFilePath (FwSectorHeader->FilePath, '/') ;
+    Res = CreateFileList (FwSectorHeader) ;
   }
 
   free (FwSectorHeader) ;
   return 0;
 }
 
-int SplitFilePath (char *TargetString, char Spliter) 
+int CreateFileList (SectorHeader *SourceFile) 
 {
-  char *PathBuffer = NULL;
-  char *PtrSpliter = &Spliter;
-
-  PathBuffer = malloc (64) ;
-
-
-
-  printf ("File path spliter : \n") ;
-
+  static int ActiveCounter = 0;
   /*
-    todo
-    Split full file path with strtok
+    MainFileList always point to HEAD of this list
   */
-  
+  if (MainFileList == NULL) {
+    /*
+     File list is not allocate yet.
+    */
+    MainFileList = malloc (sizeof (FileList) ) ;
+    
+    if (MainFileList == -1) {
+      /*
+	Memory request fail
+      */
+      printf ("*Create file list fail.\n") ;
+      return -1;
+    } else {
+      /*
+	Create new object success.
+      */
+      
+
+      /*
+	Porting file datas from SectorHeader
+      */
+      ///
+      MainFileList->FilePath    = PharseFilePath (SourceFile->FilePath) ;
+      MainFileList->SectorIndex = SourceFile->SectorIndex;
+      MainFileList->FileSize    = SourceFile->FileSize; 
+      return 0;
+    }
+  } else {
+    /*
+      File list is allocated, point to next.
+    */
+    
+  }
   
   return 0;
+}
+
+
+char *PharseFilePath (char *TargetPath) 
+{
+  char PathStringBuffer[1024] = {0} ;
+  char *PathStringSlice = NULL;
+  char *OutputPathString = NULL;
+
+  PathStringSlice = strtok (TargetPath, "\\") ; /* Pharse '\' */
+  while (PathStringSlice != NULL) {
+    /*
+      Append to Buffer
+    */
+    strcat (PathStringBuffer, PathStringSlice) ;
+
+    /*
+      Next Slice
+    */
+    PathStringSlice = strtok (NULL, "\\") ;
+    if (PathStringSlice != NULL) {
+      /*
+	Append directory sepherator
+      */
+      #ifdef LINUX
+      strcat (PathStringBuffer, "/") ;
+      #endif
+    }
+  }
+  printf ("Buffer = %s\n", PathStringBuffer) ;
+  return OutputPathString ;
 }

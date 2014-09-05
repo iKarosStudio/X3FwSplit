@@ -7,6 +7,8 @@ function prototype and sturcture define
 #include <stdlib.h>
 #include <string.h>
 
+#define LINUX
+
 #define SECTOR_SIZE 512 /* 1 Sector = n bytes */
 
 #define FILE_HEADER_SIZE 512
@@ -36,15 +38,16 @@ typedef struct {
   unsigned int SectorIndex;
   unsigned int FileSize;
   void *NextFile;
-} SplitFileList;
+} FileList;
 
 
 int Img2File (char *InputFilePath, char *OutputFilePath) ;
 
 int DumpFileHeader (FILE *FwFileRam) ;
 int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount) ;
+int CreateFileList (SectorHeader *SourceFile) ;
 
-int SplitFilePath (char *FullPath, char Spliter) ;
+char *PharseFilePath (char *TargetPath) ;
 
 
 

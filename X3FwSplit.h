@@ -33,19 +33,12 @@ typedef struct {
   unsigned int FileSize;
 } SectorHeader ;
 
-typedef struct {
-  char *FilePath;
-  unsigned int SectorIndex;
-  unsigned int FileSize;
-  void *NextFile;
-} FileList;
-
 
 int Img2File (char *InputFilePath, char *OutputFilePath) ;
 
 int DumpFileHeader (FILE *FwFileRam) ;
 int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount) ;
-int CreateFileList (SectorHeader *SourceFile) ;
+int CreateFile (SectorHeader *SourceFile) ;
 
 char *PharseFilePath (char *TargetPath) ;
 

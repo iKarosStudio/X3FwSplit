@@ -146,58 +146,19 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
     FwSectorAddress += SECTOR_HEADER_SIZE;
 
     /*
-      Split file path
+      Create file from sector header.
     */
-    Res = CreateFileList (FwSectorHeader) ;
+    Res = CreateFile (FwSectorHeader) ;
   }
 
   free (FwSectorHeader) ;
   return 0;
 }
 
-int CreateFileList (SectorHeader *SourceFile) 
-{
-  static int ActiveCounter = 0;
-  /*
-    MainFileList always point to HEAD of this list
-  */
-  if (MainFileList == NULL) {
-    /*
-     File list is not allocate yet.
-    */
-    MainFileList = malloc (sizeof (FileList) ) ;
-    
-    if (MainFileList == -1) {
-      /*
-	Memory request fail
-      */
-      printf ("*Create file list fail.\n") ;
-      return -1;
-    } else {
-      /*
-	Create new object success.
-      */
-      
-
-      /*
-	Porting file datas from SectorHeader
-      */
-      ///
-      MainFileList->FilePath    = PharseFilePath (SourceFile->FilePath) ;
-      MainFileList->SectorIndex = SourceFile->SectorIndex;
-      MainFileList->FileSize    = SourceFile->FileSize; 
-      return 0;
-    }
-  } else {
-    /*
-      File list is allocated, point to next.
-    */
-    
-  }
+int CreateFile (SectorHeader, *SourceFile) {
   
   return 0;
 }
-
 
 char *PharseFilePath (char *TargetPath) 
 {
@@ -223,6 +184,16 @@ char *PharseFilePath (char *TargetPath)
       #ifdef LINUX
       strcat (PathStringBuffer, "/") ;
       #endif
+
+      /*
+	Create folder for path
+      */
+    } else {
+      /*
+	Create path file
+      */
+
+	
     }
   }
   printf ("Buffer = %s\n", PathStringBuffer) ;

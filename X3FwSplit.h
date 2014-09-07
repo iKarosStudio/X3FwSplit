@@ -7,12 +7,17 @@ function prototype and sturcture define
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/stat.h>
+
 #define LINUX
 
 #define SECTOR_SIZE 512 /* 1 Sector = n bytes */
 
 #define FILE_HEADER_SIZE 512
 #define SECTOR_HEADER_SIZE 64
+
+#define OUTPUT_ROOT_FOLDER "OutputX3"
+#define FOLDER_PERMISSION (S_IRWXU | S_IRWXG | S_IRWXO)
 
 typedef struct {
   char StartSignature[4];

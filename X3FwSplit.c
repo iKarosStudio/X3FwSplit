@@ -7,14 +7,11 @@
 void *FwFileRam = NULL;
 unsigned int FileAmount = 0;
 
-/* A list content file path ready to create */
-FileList *MainFileList = NULL ;
 
 int Img2File (char *InputFilePath, char *OutputFilePath) 
 {
   int Res = 0;
   int Index = 0;
-  FileList *PtrCurretFile = NULL;
   int FwFileSize = 0;
   FILE *FwFileImg;
   /*
@@ -39,12 +36,16 @@ int Img2File (char *InputFilePath, char *OutputFilePath)
     */
     FwFileRam = malloc (FwFileSize) ;
     if (FwFileRam) {
-      printf ("*Create ram buffer @ 0x%08x\n", FwFileRam) ;
+      printf ("*Allocate %d bytes @ %08p", FwFileSize, FwFileRam) ;
       /*
 	Copy image to ram
        */
       Res = fread (FwFileRam, FwFileSize, 1, FwFileImg) ;
       printf ("*Copied %d bytes to ram\n", Res) ;
+      Res = mkdir (OUTPUT_ROOT_FOLDER, FOLDER_PERMISSION) ;
+      if (Res == -1) {
+	perror ("Make folder fail") ;
+      }
 
       /*
 	Dump fw file header information to user
@@ -126,19 +127,20 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
   FwSectorAddress = (FwFileRam + (FILE_HEADER_SIZE * 4) ) ;
 
   
-  FwSectorHeader = malloc (SECTOR_HEADER_SIZE) ;
-  //for (SectorIndex = 0; SectorIndex < FileAmount; SectorIndex++) {
-  for (SectorIndex = 0; SectorIndex < 1; SectorIndex++) {
+  FwSectorHeader = malloc (sizeof (SectorHeader) ) ;
+  for (SectorIndex = 0; SectorIndex < FileAmount; SectorIndex++) {
+  //for (SectorIndex = 0; SectorIndex < 1; SectorIndex++) {
     memcpy (FwSectorHeader, FwSectorAddress, SECTOR_HEADER_SIZE) ;
 
     /*
       Dump sector information to user
     */
-    printf ("---- File %04d ----\n", SectorIndex) ;
-    printf ("Full Path    : %s \n", FwSectorHeader->FilePath) ;
-    printf ("Sector Index : 0x%08X \n", FwSectorHeader->SectorIndex) ;
-    printf ("File Size    : %d bytes\n", FwSectorHeader->FileSize) ;
-    printf ("-------------------\n") ;
+    printf ("[%04d - %08x]", SectorIndex, FwSectorAddress) ;
+    //printf ("---- File %04d ----\n", SectorIndex) ;
+    // printf ("Full Path    : %s \n", FwSectorHeader->FilePath) ;
+    //printf ("Sector Index : 0x%08X \n", FwSectorHeader->SectorIndex) ;
+    //printf ("File Size    : %d bytes\n", FwSectorHeader->FileSize) ;
+    //printf ("-------------------\n") ;
 
     /*
       Move pointer to next table offset
@@ -152,11 +154,19 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
   }
 
   free (FwSectorHeader) ;
+  free (FwFileRam) ;
   return 0;
 }
 
-int CreateFile (SectorHeader, *SourceFile) {
-  
+int CreateFile (SectorHeader *SourceFile) {
+  char *OutputFilePath = NULL;
+  FILE *OutputFile = NULL;
+
+  OutputFilePath = PharseFilePath (SourceFile->FilePath) ;
+  OutputFile = fopen (OutputFilePath, "wb") ;
+  fwrite ((FwFileRam + (SourceFile->SectorIndex * SECTOR_SIZE) ), 1,  SourceFile->FileSize, OutputFile) ;
+  fclose (OutputFile) ;
+  //free (OutputFilePath) ;
   return 0;
 }
 
@@ -164,7 +174,17 @@ char *PharseFilePath (char *TargetPath)
 {
   char PathStringBuffer[1024] = {0} ;
   char *PathStringSlice = NULL;
-  char *OutputPathString = NULL;
+  char *OutputFilePath = NULL;
+  
+  int Res = 0;
+
+  /*
+    Set root ouput folder
+  */
+  strcat (PathStringBuffer, OUTPUT_ROOT_FOLDER) ;
+  #ifdef LINUX
+  strcat (PathStringBuffer, "/") ;
+  #endif
 
   PathStringSlice = strtok (TargetPath, "\\") ; /* Pharse '\' */
   while (PathStringSlice != NULL) {
@@ -173,29 +193,39 @@ char *PharseFilePath (char *TargetPath)
     */
     strcat (PathStringBuffer, PathStringSlice) ;
 
+
     /*
       Next Slice
     */
     PathStringSlice = strtok (NULL, "\\") ;
     if (PathStringSlice != NULL) {
       /*
+	Create folder for path
+      */
+      #ifdef LINUX
+      Res = mkdir (PathStringBuffer, FOLDER_PERMISSION) ;
+      if (Res == -1) {
+	//perror (PathStringBuffer) ;
+      }
+      #endif
+
+      /*
 	Append directory sepherator
       */
       #ifdef LINUX
       strcat (PathStringBuffer, "/") ;
       #endif
-
-      /*
-	Create folder for path
-      */
+      
     } else {
       /*
 	Create path file
       */
-
-	
+      printf ("WriteFile : %s\n", PathStringBuffer) ;
     }
   }
-  printf ("Buffer = %s\n", PathStringBuffer) ;
-  return OutputPathString ;
+  
+  //OutputFilePath = malloc (strlen (PathStringBuffer) + 1 ) ;
+  OutputFilePath = malloc (2048) ;
+  strcpy (OutputFilePath, PathStringBuffer) ;
+  return OutputFilePath ;
 }

@@ -92,7 +92,7 @@ int DumpFileHeader (FILE *FwFileRam)
     printf ("--- .fw FILE HEADER INFORMATION ---\n") ;
     printf ("-----------------------------------\n") ;
     printf ("Start signature : %s\n", FwFileHeader->StartSignature) ;
-    printf ("Sector amount   : 0x%08X\n", FwFileHeader->SectorAmount) ;
+    printf ("Sector amount   : %d\n", (int) FwFileHeader->SectorAmount) ;
     printf ("Unknown1        : 0x%08X\n", FwFileHeader->Unknown1) ;
     printf ("Unknown2        : 0x%08X\n", FwFileHeader->Unknown2) ;
     printf ("Time stamp      : %s\n", FwFileHeader->TimeStamp) ;

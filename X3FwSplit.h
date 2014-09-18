@@ -46,6 +46,7 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount) ;
 int CreateFile (SectorHeader *SourceFile) ;
 
 char *PharseFilePath (char *TargetPath) ;
+int FindChecksum (char *FileImg) ; 
 
 
 

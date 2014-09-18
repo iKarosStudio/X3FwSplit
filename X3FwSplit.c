@@ -4,8 +4,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <zlib.h>
+
 void *FwFileRam = NULL;
 unsigned int FileAmount = 0;
+unsigned int Checksum = 0;
+unsigned int Crc32 = 0;
 
 
 int Img2File (char *InputFilePath, char *OutputFilePath) 
@@ -56,10 +60,20 @@ int Img2File (char *InputFilePath, char *OutputFilePath)
 	Dump each sector header information to user
       */
       Res = DumpSecterHeader (FwFileRam, FileAmount) ;
+
+
       free (FwFileRam) ;
     }
 
     fclose (FwFileImg) ;
+
+    /*
+      Find check sum
+    */
+    FindChecksum (InputFilePath) ;
+    printf ("Checksum:%08x\n", Checksum) ;
+    printf ("CRC32   :%08x\n", Crc32) ;
+    
   } else {
     printf ("fail! (Path of Filename error?)\n") ;
   }
@@ -244,3 +258,39 @@ char *PharseFilePath (char *TargetPath)
   return OutputFilePath ;
 }
 
+int FindChecksum (char *FileImg) 
+{
+  FILE *fi = NULL;
+  unsigned int Size = 0;
+  //unsigned int Buffer = 0;
+  void *Buffer = NULL;
+  int Res = 0;
+
+  fi = fopen (FileImg, "rb") ;
+
+  fseek (fi, 0, SEEK_SET) ;
+  fseek (fi, 0, SEEK_END) ;
+  Size = ftell (fi) ;
+  Buffer = malloc (Size) ;
+
+  fseek (fi, 0, SEEK_SET) ;
+  fread (&Buffer, Size, 1, fi) ;
+  
+  Crc32 = crc32 (Crc32, (const Bytef *) Buffer, Size) ;
+  
+  /*
+  while (!feof (fi) ) {
+    fread (&Buffer, 4, 1, fi) ;
+    
+    Checksum += Buffer;
+    Crc32 = crc32 (Crc32, (const Bytef *) Buffer, 4) ;
+    
+    if (Checksum == 0x626A29EC || Checksum == 0xEC296A62) {
+      printf ("found\n") ;
+    }
+  }
+  */
+  
+  fclose (fi) ;
+  return 0;
+}

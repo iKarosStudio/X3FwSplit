@@ -3,7 +3,6 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
 #include <zlib.h>
 
 void *FwFileRam = NULL;
@@ -21,7 +20,7 @@ int Img2File (char *InputFilePath, char *OutputFilePath)
   /*
     Load .fw file and create memory image.
   */
-  printf ("*Open %s ... ", InputFilePath) ;
+  printf ("\n*Open %s ... ", InputFilePath) ;
   FwFileImg = fopen (InputFilePath, "rb") ;
 
   if (FwFileImg) {
@@ -40,15 +39,14 @@ int Img2File (char *InputFilePath, char *OutputFilePath)
     */
     FwFileRam = malloc (FwFileSize) ;
     if (FwFileRam) {
-      printf ("*Allocate %d bytes @ %08p\n", FwFileSize, FwFileRam) ;
+      //printf ("*Allocate %d bytes @ %08p\n", FwFileSize, FwFileRam) ;
       /*
 	Copy image to ram
        */
       Res = fread (FwFileRam, FwFileSize, 1, FwFileImg) ;
-      printf ("*Copied %d bytes to ram\n", Res) ;
       Res = mkdir (OUTPUT_ROOT_FOLDER, FOLDER_PERMISSION) ;
       if (Res == -1) {
-	perror ("Make folder fail") ;
+	perror ("Make folder fail, reason") ;
       }
 
       /*
@@ -71,8 +69,8 @@ int Img2File (char *InputFilePath, char *OutputFilePath)
       Find check sum
     */
     FindChecksum (InputFilePath) ;
-    printf ("Checksum:%08x\n", Checksum) ;
-    printf ("CRC32   :%08x\n", Crc32) ;
+    printf ("Try Checksum:%08X\n", Checksum) ;
+    printf ("Try CRC32   :%08X\n", Crc32) ;
     
   } else {
     printf ("fail! (Path of Filename error?)\n") ;
@@ -91,13 +89,13 @@ int DumpFileHeader (FILE *FwFileRam)
   */
   FwFileHeader = malloc (FILE_HEADER_SIZE ) ;
   if (FwFileHeader) {
-    printf ("*Allocate %d bytes @ 0x%08x\n", FILE_HEADER_SIZE, FwFileHeader) ;
+    //printf ("*Allocate %d bytes @ 0x%08x\n", FILE_HEADER_SIZE, FwFileHeader) ;
 
     /*
       Copy .fw file header information form memory to buffer.
      */
     memcpy (FwFileHeader, FwFileRam, FILE_HEADER_SIZE) ;
-    printf ("*Copied %d bytes to buffer\n", FILE_HEADER_SIZE) ;
+    //printf ("*Copied %d bytes to buffer\n", FILE_HEADER_SIZE) ;
 
     /*
       Start dump fw header information
@@ -111,7 +109,7 @@ int DumpFileHeader (FILE *FwFileRam)
     printf ("Unknown2        : 0x%08X\n", FwFileHeader->Unknown2) ;
     printf ("Time stamp      : %s\n", FwFileHeader->TimeStamp) ;
     printf ("File amount     : %d\n", FwFileHeader->FileAmount) ;
-    printf ("Fw Version      : %d.%02d\n", FwFileHeader->FwVerion[0], FwFileHeader->FwVerion[1]) ;
+    //printf ("Fw Version      : %d.%02d\n", FwFileHeader->FwVerion[0], FwFileHeader->FwVerion[1]) ;
     printf ("Fw Module       : %s\n", FwFileHeader->FwModule) ;
     printf ("End signature   : 0x%08X\n", FwFileHeader->EndSignature) ;
 
@@ -133,6 +131,7 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
   void *FwSectorAddress = NULL;
   SectorHeader *FwSectorHeader = NULL;
   unsigned int SectorIndex = 0;
+  unsigned int TailCode = 0;
   int Res = 0;
 
   /*
@@ -143,18 +142,29 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
   
   FwSectorHeader = malloc (sizeof (SectorHeader) ) ;
   for (SectorIndex = 1; SectorIndex <= FileAmount; SectorIndex++) {
-  //for (SectorIndex = 0; SectorIndex < 1; SectorIndex++) {
     memcpy (FwSectorHeader, FwSectorAddress, SECTOR_HEADER_SIZE) ;
 
     /*
       Dump sector information to user
     */
-    //printf ("[%04d - %08x]", SectorIndex, FwSectorAddress-FwFileRam) ;
+    //printf ("[%04d]", SectorIndex) ;
     //printf ("---- File %04d ----\n", SectorIndex) ;
-    // printf ("Full Path    : %s \n", FwSectorHeader->FilePath) ;
+    //printf (" : %s \n", FwSectorHeader->FilePath) ;
     //printf ("Sector Index : 0x%08X \n", FwSectorHeader->SectorIndex) ;
     //printf ("File Size    : %d bytes\n", FwSectorHeader->FileSize) ;
     //printf ("-------------------\n") ;
+
+
+    /*
+      Dump code at file tail
+    */
+    if (SectorIndex == FileAmount) { /* Final file */
+      memcpy (&TailCode,
+	      (FwFileRam + (FwSectorHeader->SectorIndex * 512) + FwSectorHeader->FileSize) ,
+	      4) ;
+      printf ("Final : 0x%08X\n", TailCode) ;
+    }
+    //Crc32 = crc32 (Crc32, (const Bytef *) FwSectorHeader->FilePath, 7) ;
 
     /*
       Create file from sector header.
@@ -183,7 +193,7 @@ int CreateFile (SectorHeader *SourceFile) {
   OutputFilePath = PharseFilePath (SourceFile->FilePath) ;
   OutputFile = fopen (OutputFilePath, "wb") ;
   
-  fwrite ((FwFileRam + (SourceFile->SectorIndex << 9) ),
+  fwrite ((FwFileRam + (SourceFile->SectorIndex << 9) ), /* << 9 -> *512 sector size */
 	  1,
 	  SourceFile->FileSize,
 	  OutputFile) ;
@@ -258,12 +268,15 @@ char *PharseFilePath (char *TargetPath)
   return OutputFilePath ;
 }
 
+/*
+ Just for test
+ */
 int FindChecksum (char *FileImg) 
 {
   FILE *fi = NULL;
   unsigned int Size = 0;
-  //unsigned int Buffer = 0;
-  void *Buffer = NULL;
+  unsigned int Buffer = 0;
+  //unsigned int *Buffer = NULL;
   int Res = 0;
 
   fi = fopen (FileImg, "rb") ;
@@ -271,21 +284,16 @@ int FindChecksum (char *FileImg)
   fseek (fi, 0, SEEK_SET) ;
   fseek (fi, 0, SEEK_END) ;
   Size = ftell (fi) ;
-  Buffer = malloc (Size) ;
+  
 
-  fseek (fi, 0, SEEK_SET) ;
-  fread (&Buffer, Size, 1, fi) ;
-  
-  Crc32 = crc32 (Crc32, (const Bytef *) Buffer, Size) ;
-  
+  fseek (fi, 4, SEEK_SET) ;
   /*
   while (!feof (fi) ) {
     fread (&Buffer, 4, 1, fi) ;
-    
     Checksum += Buffer;
-    Crc32 = crc32 (Crc32, (const Bytef *) Buffer, 4) ;
-    
-    if (Checksum == 0x626A29EC || Checksum == 0xEC296A62) {
+    Crc32 = crc32 (Crc32, (const Bytef *) &Buffer, 1) ;
+    if (Crc32 == 0x626A29EC || Crc32 == 0xec296a62 ||
+	Checksum == 0x626A29EC || Checksum == 0xEC296A62) {
       printf ("found\n") ;
     }
   }

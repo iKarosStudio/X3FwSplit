@@ -20,7 +20,7 @@ int Img2File (char *InputFilePath, char *OutputFilePath)
   /*
     Load .fw file and create memory image.
   */
-  printf ("\n*Open %s ... ", InputFilePath) ;
+  printf ("Open %s ... ", InputFilePath) ;
   FwFileImg = fopen (InputFilePath, "rb") ;
 
   if (FwFileImg) {
@@ -32,7 +32,7 @@ int Img2File (char *InputFilePath, char *OutputFilePath)
     fseek (FwFileImg, 0, SEEK_END) ;
     FwFileSize = ftell (FwFileImg) ;
     fseek (FwFileImg, 0, SEEK_SET) ;
-    printf ("*File Size : %d bytes\n", FwFileSize) ;
+    printf ("File Size : %d Kb\n", FwFileSize / 1024) ;
     
     /*
       Request ram space
@@ -162,9 +162,8 @@ int DumpSecterHeader (void *FwFileRam, unsigned int FileAmount)
       memcpy (&TailCode,
 	      (FwFileRam + (FwSectorHeader->SectorIndex * 512) + FwSectorHeader->FileSize) ,
 	      4) ;
-      printf ("Final : 0x%08X\n", TailCode) ;
+      //printf ("Final : 0x%08X\n", TailCode) ;
     }
-    //Crc32 = crc32 (Crc32, (const Bytef *) FwSectorHeader->FilePath, 7) ;
 
     /*
       Create file from sector header.
@@ -198,10 +197,10 @@ int CreateFile (SectorHeader *SourceFile) {
 	  SourceFile->FileSize,
 	  OutputFile) ;
 
-  //printf (" \"%s\" - [%08p] - [%d] bytes\n",
-	  //OutputFilePath,
-	  //SourceFile->SectorIndex * SECTOR_SIZE,
-	  //SourceFile->FileSize) ;
+  printf ("[0x%08X] - \"%s\" - [%d] bytes\n",
+	SourceFile->SectorIndex * SECTOR_SIZE,
+	OutputFilePath,
+	SourceFile->FileSize) ;
 	  
   fclose (OutputFile) ;
   free (OutputFilePath) ;
